@@ -8,8 +8,16 @@ import (
 
 func main() {
 	e := echo.New()
+
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
+
+	e.POST("/files", uploadHandler)
+
 	e.Logger.Fatal(e.Start(":8000"))
+}
+
+func uploadHandler(c echo.Context) error {
+	return c.String(http.StatusBadRequest, "nope")
 }
