@@ -31,8 +31,33 @@ func main() {
 	})
 
 	e.POST("/files", s.uploadHandler)
+	e.GET("/files/:filename", s.downloadHandler)
 
 	e.Logger.Fatal(e.Start(":8000"))
+}
+
+func (s *Server) downloadHandler(c echo.Context) error {
+	name := c.Param("filename")
+
+	reader, err := s.storage.GetObject(
+		c.Request().Context(),
+		"videos",
+		name,
+		minio.GetObjectOptions{},
+	)
+	if err != nil {
+		c.Echo().Logger.Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	defer reader.Close()
+
+	stat, err := reader.Stat()
+	if err != nil {
+		c.Echo().Logger.Error(err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	return c.Stream(http.StatusOK, stat.ContentType, reader)
 }
 
 func (s *Server) uploadHandler(c echo.Context) error {
